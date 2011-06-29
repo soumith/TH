@@ -16,6 +16,14 @@ extern void torch_LongStorage_init(lua_State *L);
 extern void torch_FloatStorage_init(lua_State *L);
 extern void torch_DoubleStorage_init(lua_State *L);
 
+extern void torch_ByteStorage_init_copy(lua_State *L);
+extern void torch_CharStorage_init_copy(lua_State *L);
+extern void torch_ShortStorage_init_copy(lua_State *L);
+extern void torch_IntStorage_init_copy(lua_State *L);
+extern void torch_LongStorage_init_copy(lua_State *L);
+extern void torch_FloatStorage_init_copy(lua_State *L);
+extern void torch_DoubleStorage_init_copy(lua_State *L);
+
 extern void torch_ByteTensor_init(lua_State *L);
 extern void torch_CharTensor_init(lua_State *L);
 extern void torch_ShortTensor_init(lua_State *L);
@@ -63,6 +71,14 @@ DLL_EXPORT int luaopen_libtorch(lua_State *L)
   torch_LongStorage_init(L);
   torch_FloatStorage_init(L);
   torch_DoubleStorage_init(L);
+
+  torch_ByteStorage_init_copy(L);
+  torch_CharStorage_init_copy(L);
+  torch_ShortStorage_init_copy(L);
+  torch_IntStorage_init_copy(L);
+  torch_LongStorage_init_copy(L);
+  torch_FloatStorage_init_copy(L);
+  torch_DoubleStorage_init_copy(L);
 
   torch_ByteTensor_init(L);
   torch_CharTensor_init(L);

@@ -56,25 +56,25 @@ static int torch_Storage_(resize)(lua_State *L)
 static int torch_Storage_(copy)(lua_State *L)
 {
   THStorage *storage = luaT_checkudata(L, 1, torch_Storage_id);
-  void *src;
-  if( (src = luaT_toudata(L, 2, torch_Storage_id)) )
-    THStorage_(copy)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_ByteStorage_id)) )
-    THStorage_(copyByte)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_CharStorage_id)) )
-    THStorage_(copyChar)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_ShortStorage_id)) )
-    THStorage_(copyShort)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_IntStorage_id)) )
-    THStorage_(copyInt)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_LongStorage_id)) )
-    THStorage_(copyLong)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_FloatStorage_id)) )
-    THStorage_(copyFloat)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_DoubleStorage_id)) )
-    THStorage_(copyDouble)(storage, src);
+  const void *src_id = luaT_id(L, 2);
+
+  if(src_id)
+  {
+    void *src = luaT_toudata(L, 2, src_id);
+    luaT_getfieldchecktable(L, 1, "__copy");
+    lua_pushlightuserdata(L, (void*)src_id);
+    lua_rawget(L, -2);
+    if(lua_islightuserdata(L, -1))
+    {
+      void (*func)(THStorage *, void *) = lua_touserdata(L, -1);
+      func(storage, src);
+    }
+    else
+      luaL_argcheck(L, 0, 2, "do not how to copy that (Storage expected)");
+  }
   else
-    luaL_typerror(L, 2, "torch.*Storage");
+    luaL_argcheck(L, 0, 2, "invalid argument");
+
   lua_settop(L, 1);
   return 1;
 }
@@ -200,7 +200,51 @@ void torch_Storage_(init)(lua_State *L)
   torch_Storage_id = luaT_newmetatable(L, STRING_torchStorage, NULL,
                                   torch_Storage_(new), torch_Storage_(free), torch_Storage_(factory));
   luaL_register(L, NULL, torch_Storage_(_));
+
   lua_pop(L, 1);
+}
+
+void torch_Storage_(init_copy)(lua_State *L)
+{
+  luaT_pushmetaclass(L, torch_Storage_id);
+
+  /* __copy[id] = copy func */
+  lua_pushstring(L, "__copy");
+  lua_newtable(L);
+
+  lua_pushlightuserdata(L, (void*)torch_ByteStorage_id);
+  lua_pushlightuserdata(L, (void*)THStorage_(copyByte));
+  lua_rawset(L, -3);
+
+  lua_pushlightuserdata(L, (void*)torch_CharStorage_id);
+  lua_pushlightuserdata(L, (void*)THStorage_(copyChar));
+  lua_rawset(L, -3);
+
+  lua_pushlightuserdata(L, (void*)torch_ShortStorage_id);
+  lua_pushlightuserdata(L, (void*)THStorage_(copyShort));
+  lua_rawset(L, -3);
+
+  lua_pushlightuserdata(L, (void*)torch_IntStorage_id);
+  lua_pushlightuserdata(L, (void*)THStorage_(copyInt));
+  lua_rawset(L, -3);
+
+  lua_pushlightuserdata(L, (void*)torch_LongStorage_id);
+  lua_pushlightuserdata(L, (void*)THStorage_(copyLong));
+  lua_rawset(L, -3);
+
+  lua_pushlightuserdata(L, (void*)torch_FloatStorage_id);
+  lua_pushlightuserdata(L, (void*)THStorage_(copyFloat));
+  lua_rawset(L, -3);
+
+  lua_pushlightuserdata(L, (void*)torch_DoubleStorage_id);
+  lua_pushlightuserdata(L, (void*)THStorage_(copyDouble));
+  lua_rawset(L, -3);
+
+  lua_pushlightuserdata(L, (void*)torch_Storage_id);
+  lua_pushlightuserdata(L, (void*)THStorage_(copy));
+  lua_rawset(L, -3);
+
+  lua_rawset(L, -3); /* metatable[__copy] */
 }
 
 #endif
