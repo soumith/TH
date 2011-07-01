@@ -53,31 +53,23 @@ static int torch_Storage_(resize)(lua_State *L)
   return 1;
 }
 
-static int torch_Storage_(copy)(lua_State *L)
-{
-  THStorage *storage = luaT_checkudata(L, 1, torch_Storage_id);
-  void *src;
-  if( (src = luaT_toudata(L, 2, torch_Storage_id)) )
-    THStorage_(copy)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_ByteStorage_id)) )
-    THStorage_(copyByte)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_CharStorage_id)) )
-    THStorage_(copyChar)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_ShortStorage_id)) )
-    THStorage_(copyShort)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_IntStorage_id)) )
-    THStorage_(copyInt)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_LongStorage_id)) )
-    THStorage_(copyLong)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_FloatStorage_id)) )
-    THStorage_(copyFloat)(storage, src);
-  else if( (src = luaT_toudata(L, 2, torch_DoubleStorage_id)) )
-    THStorage_(copyDouble)(storage, src);
-  else
-    luaL_typerror(L, 2, "torch.*Storage");
-  lua_settop(L, 1);
-  return 1;
-}
+#define IMPLEMENT_TORCH_STORAGE_COPY(TYPEC)                             \
+  static int torch_Storage_(copy ## TYPEC)(lua_State *L)                \
+  {                                                                     \
+    THStorage *self = luaT_checkudata(L, 1, torch_Storage_id);          \
+    TH##TYPEC##Storage *src = luaT_checkudata(L, 2, torch_##TYPEC##Storage_id); \
+    THStorage_(copy##TYPEC)(self, src);                                 \
+    lua_settop(L, 1);                                                   \
+    return 1;                                                           \
+  }
+
+IMPLEMENT_TORCH_STORAGE_COPY(Byte)
+IMPLEMENT_TORCH_STORAGE_COPY(Char)
+IMPLEMENT_TORCH_STORAGE_COPY(Short)
+IMPLEMENT_TORCH_STORAGE_COPY(Int)
+IMPLEMENT_TORCH_STORAGE_COPY(Long)
+IMPLEMENT_TORCH_STORAGE_COPY(Float)
+IMPLEMENT_TORCH_STORAGE_COPY(Double)
 
 static int torch_Storage_(fill)(lua_State *L)
 {
@@ -184,7 +176,13 @@ static const struct luaL_Reg torch_Storage_(_) [] = {
   {"__index__", torch_Storage_(__index__)},
   {"resize", torch_Storage_(resize)},
   {"fill", torch_Storage_(fill)},
-  {"copy", torch_Storage_(copy)},
+  {"copyByte", torch_Storage_(copyByte)},
+  {"copyChar", torch_Storage_(copyChar)},
+  {"copyShort", torch_Storage_(copyShort)},
+  {"copyInt", torch_Storage_(copyInt)},
+  {"copyLong", torch_Storage_(copyLong)},
+  {"copyFloat", torch_Storage_(copyFloat)},
+  {"copyDouble", torch_Storage_(copyDouble)},
   {"write", torch_Storage_(write)},
   {"read", torch_Storage_(read)},
 #if defined(TH_REAL_IS_CHAR) || defined(TH_REAL_IS_BYTE)

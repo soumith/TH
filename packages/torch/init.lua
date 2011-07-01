@@ -56,6 +56,7 @@ function torch.class(tname, parenttname)
    return mt, mpt
 end
 
+torch.include('torch', 'Storage.lua')
 torch.include('torch', 'Tensor.lua')
 torch.include('torch', 'File.lua')
 torch.include('torch', 'CmdLine.lua')
