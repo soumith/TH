@@ -17,6 +17,17 @@ ENDIF(COMMAND CMAKE_POLICY)
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/scripts 
 		      ${CMAKE_BINARY_DIR}/cmake ${CMAKE_MODULE_PATH})
 
+IF (LUAROCKS_PREFIX)
+   # If Torch is installed as a rock, we get the Luarocks prefix and
+   # generate the install prefix from it.
+   # Note: this is really bad, the proper way of doing a rock is to
+   # actually install everything in the luarocks folder, and then let
+   # luarocks export all the files.
+   MESSAGE(STATUS "LUAROCKS_PREFIX= ${LUAROCKS_PREFIX}")
+   STRING(REGEX REPLACE "(.*)lib/luarocks/rocks.*" "\\1" CMAKE_INSTALL_PREFIX "${LUAROCKS_PREFIX}" )
+   MESSAGE(STATUS "Installing to: " ${CMAKE_INSTALL_PREFIX})
+ENDIF (LUAROCKS_PREFIX)
+
 INCLUDE(TorchPaths)
 
 IF(UNIX)

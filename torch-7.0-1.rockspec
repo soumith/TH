@@ -25,6 +25,6 @@ dependencies = {
 build = {
    type = "cmake",
    variables = {
-      CMAKE_INSTALL_PREFIX = "$(PREFIX)"
+      LUAROCKS_PREFIX = "$(PREFIX)"
    }
 }
