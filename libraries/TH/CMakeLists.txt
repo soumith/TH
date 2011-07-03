@@ -46,16 +46,38 @@ INSTALL(TARGETS TH
 INSTALL(FILES
           TH.h
           THBlas.h
+          THLab.h
           THGeneral.h
           THLogAdd.h
           THRandom.h
           THStorage.h
-          generic/THStorage.h
           THTensor.h
-          generic/THTensor.h
           THTensorApply.h
           THTensorDimApply.h
+          THGenerateAllTypes.h
+          THGenerateFloatTypes.h
+          THFile.h
+          THDiskFile.h
+          THFilePrivate.h
+          THMemoryFile.h
+          THTensorMath.h
+          THTensorRandom.h
         DESTINATION "${Torch_INSTALL_INCLUDE_SUBDIR}/TH")
+
+INSTALL(FILES
+          generic/THBlas.h
+          generic/THLab.h
+          generic/THStorage.h
+          generic/THTensor.h
+          generic/THTensorMath.h
+          generic/THTensorRandom.h
+          generic/THBlas.c
+          generic/THLab.c
+          generic/THStorage.c
+          generic/THTensor.c
+          generic/THTensorMath.c
+          generic/THTensorRandom.c
+        DESTINATION "${Torch_INSTALL_INCLUDE_SUBDIR}/TH/generic")
 
 # Create THConfig.cmake
 GET_TARGET_PROPERTY(TH_OUTPUT_NAME TH LOCATION)
