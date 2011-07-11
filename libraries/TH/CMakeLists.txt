@@ -73,6 +73,8 @@ INSTALL(FILES
           generic/THTensorMath.h
           generic/THTensorRandom.h
           generic/THBlas.c
+          generic/THStorageCopy.h
+          generic/THTensorCopy.h
           generic/THLab.c
           generic/THStorage.c
           generic/THTensor.c
