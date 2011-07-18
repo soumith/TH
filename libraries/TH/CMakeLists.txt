@@ -51,6 +51,7 @@ INSTALL(FILES
           THLogAdd.h
           THRandom.h
           THStorage.h
+          THTensorMacros.h
           THTensor.h
           THTensorApply.h
           THTensorDimApply.h
