@@ -13,31 +13,48 @@ TH_API void THLab_(validXCorr2Dptr)(real *r_,
   long or = (ir - kr) / sr + 1;
   long oc = (ic - kc) / sc + 1;
 
-  long xx, yy;  
+  long xx, yy, kx, ky;
 
-  for(yy = 0; yy < or; yy++)
-  {
-    for(xx = 0; xx < oc; xx++)
-    {
-      /* Dot product in two dimensions... (between input image and the mask) */
-      real *pi_ = t_ + yy*sr*ic + xx*sc;
+  if ((sc != 1) || (oc < 4))  {
+    // regular convolution
+    for(yy = 0; yy < or; yy++) {
+      for(xx = 0; xx < oc; xx++) {
+        /* Dot product in two dimensions... (between input image and the mask) */
+        real *pi_ = t_ + yy*sr*ic + xx*sc;
+        real *pw_ = k_;
+        accreal sum = 0;
+        for(ky = 0; ky < kr; ky++) {
+          for(kx = 0; kx < kc; kx++) {
+            sum += pi_[kx]*pw_[kx];
+          }
+          pi_ += ic; /* next input line */
+          pw_ += kc; /* next mask line */
+        }
+        /* Update output */
+        *r_ += sum;
+        *r_++;
+      }
+    }
+
+  } else {
+    // SSE-based convolution
+    for(yy = 0; yy < or; yy++) {
+      real *pi_ = t_ + yy*sr*ic;
       real *pw_ = k_;
-      accreal sum = 0;
-      long kx, ky;
-      for(ky = 0; ky < kr; ky++)
-      {
-        for(kx = 0; kx < kc; kx++) {
-          sum += pi_[kx]*pw_[kx];
+      for (ky = 0; ky < kr; ky++) {
+        real *pis_ = pi_;
+        for (kx = 0; kx < kc; kx++) {
+          THVector_(add)(r_, pis_, pw_[kx], oc);
+          pis_++;
         }
         pi_ += ic; /* next input line */
         pw_ += kc; /* next mask line */
       }
-      /* Update output */
-      *r_ += sum;
-      *r_++;
+      r_ += oc;
     }
   }
 }
+
 /*
   2D Input, 2D kernel  : convolve given image with the given kernel.
 */
@@ -49,28 +66,44 @@ TH_API void THLab_(validConv2Dptr)(real *r_,
   long or = (ir - kr) / sr + 1;
   long oc = (ic - kc) / sc + 1;
 
-  long xx, yy;  
+  long xx, yy, kx, ky;
 
-  for(yy = 0; yy < or; yy++)
-  {
-    for(xx = 0; xx < oc; xx++)
-    {
-      /* Dot product in two dimensions... (between input image and the mask) */
-      real *pi_ = t_ + yy*sr*ic + xx*sc;
+  if ((sc != 1) || (oc < 4))  {
+    // regular convolution
+    for(yy = 0; yy < or; yy++) {
+      for(xx = 0; xx < oc; xx++) {
+        /* Dot product in two dimensions... (between input image and the mask) */
+        real *pi_ = t_ + yy*sr*ic + xx*sc;
+        real *pw_ = k_ + kr*kc - 1;
+        accreal sum = 0;
+        for(ky = 0; ky < kr; ky++) {
+          for(kx = 0; kx < kc; kx++) {
+            sum += pi_[kx]*pw_[-kx];
+          }
+          pi_ += ic; /* next input line */
+          pw_ -= kc; /* next mask line */
+        }
+        /* Update output */
+        *r_ += sum;
+        *r_++;
+      }
+    }
+
+  } else {
+    // SSE-based convolution
+    for(yy = 0; yy < or; yy++) {
       real *pw_ = k_ + kr*kc - 1;
-      accreal sum = 0;
-      long kx, ky;
-      for(ky = 0; ky < kr; ky++)
-      {
-        for(kx = 0; kx < kc; kx++) {
-          sum += pi_[kx]*pw_[-kx];
+      real *pi_ = t_ + yy*sr*ic;
+      for (ky = 0; ky < kr; ky++) {
+        real *pis_ = pi_;
+        for (kx = 0; kx < kc; kx++) {
+          THVector_(add)(r_, pis_, pw_[-kx], oc);
+          pis_++;
         }
         pi_ += ic; /* next input line */
         pw_ -= kc; /* next mask line */
       }
-      /* Update output */
-      *r_ += sum;
-      *r_++;
+      r_ += oc;
     }
   }
 }
@@ -86,26 +119,43 @@ TH_API void THLab_(fullConv2Dptr)(real *r_,
   long or = (ir - 1) * sr + kr;
   long oc = (ic - 1) * sc + kc;
 
-  long xx, yy;
+  long xx, yy, kx, ky;
 
-  for(yy = 0; yy < ir; yy++)
-  {
-    for(xx = 0; xx < ic; xx++)
-    {
-      /* Outer product in two dimensions... (between input image and the mask) */
-      real *po_ = r_ + yy*sr*oc + xx*sc;
+  if ((sc != 1) || (ic < 4))  {
+    // regular convolution
+    for(yy = 0; yy < ir; yy++) {
+      for(xx = 0; xx < ic; xx++) {
+        /* Outer product in two dimensions... (between input image and the mask) */
+        real *po_ = r_ + yy*sr*oc + xx*sc;
+        real *pw_ = k_;
+        accreal sum = 0;
+        for(ky = 0; ky < kr; ky++)
+          {
+            for(kx = 0; kx < kc; kx++) {
+              po_[kx] += *t_ * pw_[kx];
+            }
+            po_ += oc; /* next input line */
+            pw_ += kc; /* next mask line */
+          }
+        t_++;
+      }
+    }
+  
+  } else {
+    // SSE-based convolution
+    for(yy = 0; yy < ir; yy++) {
+      real *po_ = r_ + yy*sr*oc;
       real *pw_ = k_;
-      accreal sum = 0;
-      long kx, ky;
-      for(ky = 0; ky < kr; ky++)
-      {
-        for(kx = 0; kx < kc; kx++) {
-          po_[kx] += *t_ * pw_[kx];
+      for (ky = 0; ky < kr; ky++) {
+        real *pos_ = po_;
+        for (kx = 0; kx < kc; kx++) {
+          THVector_(add)(pos_, t_, pw_[kx], ic);
+          pos_++;
         }
         po_ += oc; /* next input line */
         pw_ += kc; /* next mask line */
       }
-      t_++;
+      t_ += ic;
     }
   }
 }
@@ -121,26 +171,44 @@ TH_API void THLab_(fullXCorr2Dptr)(real *r_,
   long or = (ir - 1) * sr + kr;
   long oc = (ic - 1) * sc + kc;
 
-  long xx, yy;
+  long xx, yy, kx, ky;
 
-  for(yy = 0; yy < ir; yy++)
-  {
-    for(xx = 0; xx < ic; xx++)
-    {
-      /* Outer product in two dimensions... (between input image and the mask) */
-      real *po_ = r_ + yy*sr*oc + xx*sc;
+  if ((sc != 1) || (ic < 4))  {
+    // regular convolution
+    for(yy = 0; yy < ir; yy++) {
+      for(xx = 0; xx < ic; xx++) {
+        /* Outer product in two dimensions... (between input image and the mask) */
+        real *po_ = r_ + yy*sr*oc + xx*sc;
+        real *pw_ = k_ + kr*kc -1;
+        accreal sum = 0;
+        long kx, ky;
+        for(ky = 0; ky < kr; ky++)
+          {
+            for(kx = 0; kx < kc; kx++) {
+              po_[kx] += *t_ * pw_[-kx];
+            }
+            po_ += oc; /* next input line */
+            pw_ -= kc; /* next mask line */
+          }
+        t_++;
+      }
+    }
+
+  } else {
+    // SSE-based convolution
+    for(yy = 0; yy < ir; yy++) {
+      real *po_ = r_ + yy*sr*oc;
       real *pw_ = k_ + kr*kc -1;
-      accreal sum = 0;
-      long kx, ky;
-      for(ky = 0; ky < kr; ky++)
-      {
-        for(kx = 0; kx < kc; kx++) {
-          po_[kx] += *t_ * pw_[-kx];
+      for (ky = 0; ky < kr; ky++) {
+        real *pos_ = po_;
+        for (kx = 0; kx < kc; kx++) {
+          THVector_(add)(pos_, t_, pw_[-kx], ic);
+          pos_++;
         }
         po_ += oc; /* next input line */
         pw_ -= kc; /* next mask line */
       }
-      t_++;
+      t_ += ic;
     }
   }
 }
@@ -158,22 +226,38 @@ TH_API void THLab_(validXCorr2DRevptr)(real *r_,
   long or = ir - (kr - 1) * sr;
   long oc = ic - (kc - 1) * sc;
 
-  long xx, yy;
-  for(yy = 0; yy < kr; yy++)
-  {
-    for(xx = 0; xx < kc; xx++)
-    {
-      real *po_ = r_;
-      real *pi_ = t_ + yy*sr*ic + xx*sc;
-      real z = *k_++;
-      long kx, ky;
-      
-      for(ky = 0; ky < or; ky++)
-      {
-        for(kx = 0; kx < oc; kx++)
-          po_[kx] += z * pi_[kx];
-        pi_ += ic;
-        po_ += oc;
+  long xx, yy, kx, ky;
+
+  if ((sc != 1) || (kc < 4))  {
+    // regular convolution
+    for(yy = 0; yy < kr; yy++) {
+      for(xx = 0; xx < kc; xx++) {
+        real *po_ = r_;
+        real *pi_ = t_ + yy*sr*ic + xx*sc;
+        real z = *k_++;
+
+        for(ky = 0; ky < or; ky++) {
+          for(kx = 0; kx < oc; kx++)
+            po_[kx] += z * pi_[kx];
+          pi_ += ic;
+          po_ += oc;
+        }
+      }
+    }
+
+  } else {
+    // SSE-based convolution
+    for(yy = 0; yy < kr; yy++) {
+      for(xx = 0; xx < kc; xx++) {
+        real *po_ = r_;
+        real *pi_ = t_ + yy*sr*ic + xx*sc;
+        real z = *k_++;
+
+        for(ky = 0; ky < or; ky++) {
+          THVector_(add)(po_, pi_, z, oc);
+          pi_ += ic;
+          po_ += oc;
+        }
       }
     }
   }
