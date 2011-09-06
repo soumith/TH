@@ -91,16 +91,16 @@ local function findgnuplot()
    end
 end
 
-function lab.setgnuplotexe(exe)
+function plot.setgnuplotexe(exe)
    if paths.filep(exe) then
       _gptable.exe = exe
-      print('You have manually set the gnuplot exe, run lab.setgnuplotterminal("terminal-name") to set term type')
+      print('You have manually set the gnuplot exe, run plot.setgnuplotterminal("terminal-name") to set term type')
    else
       error(exe .. ' does not exist')
    end
 end
 
-function lab.setgnuplotterminal(term)
+function plot.setgnuplotterminal(term)
    if gnuplothasterm(term) then
       _gptable.term = term
    else
@@ -110,7 +110,7 @@ end
 
 local function getCurrentPlot()
    if _gptable.current == nil then
-      lab.figure()
+      plot.figure()
    end
    return _gptable[_gptable.current]
 end
@@ -232,7 +232,7 @@ local function gnuplot_string(legend,x,y,format)
    return hstr,dstr
 end
 
-function lab.closeall()
+function plot.closeall()
    for i,v in pairs(_gptable) do
       if type(i) ==  number and torch.typename(v) == 'torch.PipeFile' then
 	 v:close()
@@ -244,7 +244,7 @@ function lab.closeall()
    _gptable.current = nil
 end
 
-function lab.epsfigure(fname)
+function plot.epsfigure(fname)
    local n = #_gptable+1
    _gptable[n] = torch.PipeFile(getexec() .. ' -persist ','w')
    _gptable.current = n
@@ -252,7 +252,7 @@ function lab.epsfigure(fname)
    writeToCurrent('set output \''.. fname .. '\'')
 end
 
-function lab.pngfigure(fname)
+function plot.pngfigure(fname)
    local n = #_gptable+1
    _gptable[n] = torch.PipeFile(getexec() .. ' -persist ','w')
    _gptable.current = n
@@ -260,7 +260,7 @@ function lab.pngfigure(fname)
    writeToCurrent('set output \''.. fname .. '\'')
 end
 
-function lab.print(fname)
+function plot.print(fname)
    local suffix = fname:match('.+%.(.+)')
    local term = nil
    if suffix == 'eps' then term = 'postscript eps enhanced color'
@@ -273,7 +273,7 @@ function lab.print(fname)
    writeToCurrent('set term ' .. _gptable.term .. ' ' .. _gptable.current .. '\n')   
 end
 
-function lab.figure(n)
+function plot.figure(n)
    local nfigures = #_gptable
    if not n or _gptable[n] == nil then -- we want new figure
       n = n or #_gptable+1
@@ -284,7 +284,7 @@ function lab.figure(n)
    return n
 end
 
-function lab.plotflush(n)
+function plot.plotflush(n)
    if not n then n = _gptable.current end
    if not n then return end
    if _gptable[n] == nil then return end
@@ -293,29 +293,29 @@ function lab.plotflush(n)
    _gp:synchronize()
 end
 
-function lab.gnuplot(legend,x,y,format)
+function plot.gnuplot(legend,x,y,format)
    local hdr,data = gnuplot_string(legend,x,y,format)
    --writeToCurrent('set pointsize 2')
    writeToCurrent(hdr)
    writeToCurrent(data)
 end
 
-function lab.xlabel(label)
+function plot.xlabel(label)
    local _gp = getCurrentPlot()
    writeToCurrent('set xlabel "' .. label .. '"')
    writeToCurrent('refresh')
 end
-function lab.ylabel(label)
+function plot.ylabel(label)
    local _gp = getCurrentPlot()
    writeToCurrent('set ylabel "' .. label .. '"')
    writeToCurrent('refresh')
 end
-function lab.title(label)
+function plot.title(label)
    local _gp = getCurrentPlot()
    writeToCurrent('set title "' .. label .. '"')
    writeToCurrent('refresh')
 end
-function lab.grid(toggle)
+function plot.grid(toggle)
    if not toggle then
       print('toggle expects 1 for grid on, 0 for grid off')
    end
@@ -330,17 +330,17 @@ function lab.grid(toggle)
       print('toggle expects 1 for grid on, 0 for grid off')
    end
 end
-function lab.movelegend(hloc,vloc)
+function plot.movelegend(hloc,vloc)
    if hloc ~= 'left' and hloc ~= 'right' and hloc ~= 'center' then
-      error('horizontal location is unknown : lab.movelegend expects 2 strings as location {left|right|center}{bottom|top|middle}')
+      error('horizontal location is unknown : plot.movelegend expects 2 strings as location {left|right|center}{bottom|top|middle}')
    end
    if vloc ~= 'bottom' and vloc ~= 'top' and vloc ~= 'middle' then
-      error('horizontal location is unknown : lab.movelegend expects 2 strings as location {left|right|center}{bottom|top|middle}')
+      error('horizontal location is unknown : plot.movelegend expects 2 strings as location {left|right|center}{bottom|top|middle}')
    end
    writeToCurrent('set key ' .. hloc .. ' ' .. vloc)
    writeToCurrent('refresh')
 end
-function lab.gnuplotraw(str)
+function plot.gnuplotraw(str)
    writeToCurrent(str)
 end
 
@@ -349,7 +349,7 @@ end
 -- plot(x,y,'.'), plot(x,y,'.-')
 -- plot({x1,y1,'.'},{x2,y2,'.-'})
 -- plot({{x1,y1,'.'},{x2,y2,'.-'}})
-function lab.plot(...)
+function plot.plot(...)
    local arg = {...}
    if select('#',...) == 0 then
       error('no inputs, expecting at least a vector')
@@ -378,19 +378,31 @@ function lab.plot(...)
       xdata[#xdata+1] = x
       ydata[#ydata+1] = y
    end
-   lab.gnuplot(legends,xdata,ydata,formats)
+   plot.gnuplot(legends,xdata,ydata,formats)
 end
 
 -- bar(y)
 -- bar(x,y)
-function lab.bar(...)
+function plot.bar(...)
    local arg = {...}
    local nargs = {}
    for i = 1,select('#',...) do
       table.insert(nargs,arg[i])
    end
    table.insert(nargs, '|')
-   lab.plot(nargs)
+   plot.plot(nargs)
 end
+
+-- complete function: compute hist and display it
+function plot.hist(tensor,bins,min,max)
+   local h = lab.histc(tensor,bins,min,max)
+   local x_axis = torch.Tensor(#h)
+   for i = 1,#h do
+      x_axis[i] = h[i].val
+   end
+   plot.bar(x_axis, h.raw)
+   return h
+end
+
 
 findgnuplot()
