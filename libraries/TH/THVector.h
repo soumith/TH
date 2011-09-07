@@ -39,6 +39,23 @@
     }                                           \
   }
 
+
+#define THDoubleVector_add(y, x, c, n) {        \
+    long i = 0;                                 \
+    __m128d XMM7 = _mm_set1_pd(c);              \
+    __m128s XMM0,XMM2;                          \
+    for (; i<=((n)-2); i+=2) {                  \
+      XMM0 = _mm_loadu_pd((x)+i);               \
+      XMM2 = _mm_loadu_pd((y)+i);               \
+      XMM0 = _mm_mul_pd(XMM0, XMM7);            \
+      XMM2 = _mm_add_pd(XMM2, XMM0);            \
+      _mm_storeu_pd((y)+i  , XMM2);             \
+    }                                           \
+    for (; i<(n); i++) {                        \
+      y[i] += c * x[i];                         \
+    }                                           \
+  }
+
 #define THDoubleVector_add(y, x, c, n) {        \
     long i = 0;                                 \
     __m128d XMM7 = _mm_set1_pd(c);              \
@@ -161,13 +178,7 @@
     long i = 0;                                 \
     __m128 XMM7 = _mm_set_ps1(c);               \
     __m128 XMM0,XMM2;                           \
-    for (; i<=((n)-8); i+=4) {                  \
-      XMM0 = _mm_loadu_ps((x)+i);               \
-      XMM2 = _mm_loadu_ps((y)+i);               \
-      XMM0 = _mm_mul_ps(XMM0, XMM7);            \
-      XMM2 = _mm_add_ps(XMM2, XMM0);            \
-      _mm_storeu_ps((y)+i  , XMM2);             \
-      i += 4;                                   \
+    for (; i<=((n)-4); i+=4) {                  \
       XMM0 = _mm_loadu_ps((x)+i);               \
       XMM2 = _mm_loadu_ps((y)+i);               \
       XMM0 = _mm_mul_ps(XMM0, XMM7);            \
