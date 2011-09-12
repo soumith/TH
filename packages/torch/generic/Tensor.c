@@ -883,6 +883,7 @@ static int torch_Tensor_(read)(lua_State *L)
 }
 
 static const struct luaL_Reg torch_Tensor_(_) [] = {
+  {"contiguous", torch_Tensor_(contiguous)},
   {"size", torch_Tensor_(size)},
   {"__len__", torch_Tensor_(size)},
   {"stride", torch_Tensor_(stride)},
