@@ -1,4 +1,9 @@
-FIND_PACKAGE(CUDA 4.0)
+
+SET(WITH_CUDA OFF CACHE BOOL "Compile qlua and associated packages")
+
+IF (WITH_CUDA)
+   FIND_PACKAGE(CUDA 4.0)
+ENDIF (WITH_CUDA)
 
 IF (CUDA_FOUND)
 
