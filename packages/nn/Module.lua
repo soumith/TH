@@ -118,3 +118,33 @@ function Module:clone(...)
    end
    return clone
 end
+
+function Module:type(type)
+   -- find all tensors and convert them
+   for key,param in pairs(self) do
+      if torch.typename(param) and torch.typename(param):find('torch%..+Tensor') then
+         local new = torch.getmetatable(type).new()
+         new:resize(param:size()):copy(param)
+         self[key] = new
+      end
+   end
+   -- find submodules in classic containers 'modules'
+   if self.modules then
+      for _,module in ipairs(self.modules) do
+         module:type(type)
+      end
+   end
+   return self
+end
+
+function Module:float()
+   return self:type('torch.FloatTensor')
+end
+
+function Module:double()
+   return self:type('torch.DoubleTensor')
+end
+
+function Module:cuda()
+   return self:type('torch.CudaTensor')
+end
