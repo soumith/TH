@@ -9,6 +9,7 @@ function MSECriterion:forward(input, target)
    if input:dim() == 1 then
       self.output = input.nn.MSECriterion_forward(self, input, target)
    elseif input:dim() == 2 then
+      self.output = 0
       for i=1,target:size(1) do
          self.output = self.output + input.nn.MSECriterion_forward(self, input[i], target[i])
       end
