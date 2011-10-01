@@ -28,6 +28,15 @@ IF (LUAROCKS_PREFIX)
    MESSAGE(STATUS "Installing to: " ${CMAKE_INSTALL_PREFIX})
 ENDIF (LUAROCKS_PREFIX)
 
+SET(USE_LUAJIT FALSE CACHE BOOL "Build against LuaJIT (for better performance")
+IF (USE_LUAJIT)
+   SET(LUABIN "luajit" CACHE INTERNAL "")
+   SET(OWN_LUA OFF CACHE BOOL "3rd party software: install our own Lua")
+ELSE (USE_LUAJIT)
+   SET(LUABIN "lua" CACHE INTERNAL "")
+   SET(OWN_LUA ON CACHE BOOL "3rd party software: install our own Lua")
+ENDIF (USE_LUAJIT)
+
 INCLUDE(TorchPaths)
 
 IF(UNIX)
