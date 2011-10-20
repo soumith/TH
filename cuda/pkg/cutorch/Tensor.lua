@@ -22,6 +22,10 @@ local function Tensor__typeAs(self,tensor)
    return self:type(tensor:type())
 end
 
+local function Tensor__typeAs(self,tensor)
+   return self:type(tensor:type())
+end
+
 local function Tensor__cuda(self,type)
    return self:type('torch.CudaTensor')
 end
