@@ -22,7 +22,7 @@ All efforts will be made to keep them in sync with Torch-7's changes. If they
 seem out of date or if you have any questions on usage, 
 you can email me at my-git-username@gmail.com
 
-If you're looking for a C++ library with includes some of these optimizations,
+If you're looking for a C++ library that includes some of these optimizations,
 you can look at http://eblearn.sourceforge.net
-The TH optimizations in this library are experimental and not ready for daily use.
+The TH optimizations in eblearn are experimental and not ready for daily use.
 This message will be edited when they are ready for stable use.
