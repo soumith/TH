@@ -17,26 +17,6 @@ ENDIF(COMMAND CMAKE_POLICY)
 SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/scripts 
 		      ${CMAKE_BINARY_DIR}/cmake ${CMAKE_MODULE_PATH})
 
-IF (LUAROCKS_PREFIX)
-   # If Torch is installed as a rock, we get the Luarocks prefix and
-   # generate the install prefix from it.
-   # Note: this is really bad, the proper way of doing a rock is to
-   # actually install everything in the luarocks folder, and then let
-   # luarocks export all the files.
-   MESSAGE(STATUS "LUAROCKS_PREFIX= ${LUAROCKS_PREFIX}")
-   STRING(REGEX REPLACE "(.*)lib/luarocks/rocks.*" "\\1" CMAKE_INSTALL_PREFIX "${LUAROCKS_PREFIX}" )
-   MESSAGE(STATUS "Installing to: " ${CMAKE_INSTALL_PREFIX})
-ENDIF (LUAROCKS_PREFIX)
-
-SET(USE_LUAJIT FALSE CACHE BOOL "Build against LuaJIT (for better performance")
-IF (USE_LUAJIT)
-   SET(LUABIN "luajit" CACHE INTERNAL "")
-   SET(OWN_LUA OFF CACHE BOOL "3rd party software: install our own Lua")
-ELSE (USE_LUAJIT)
-   SET(LUABIN "lua" CACHE INTERNAL "")
-   SET(OWN_LUA ON CACHE BOOL "3rd party software: install our own Lua")
-ENDIF (USE_LUAJIT)
-
 INCLUDE(TorchPaths)
 
 IF(UNIX)
@@ -66,20 +46,7 @@ ENDIF (WIN32)
 
 INCLUDE(TorchFlags)
 
-ADD_SUBDIRECTORY(3rdparty)
-
-INCLUDE(TorchHelp)
-INCLUDE(TorchPackage)
-
-SET(WEBSITE OFF CACHE BOOLEAN "Produce the Torch website?")
-IF(WEBSITE)
-  ADD_SUBDIRECTORY(website)
-ENDIF(WEBSITE)
-
 ADD_SUBDIRECTORY(libraries)
-ADD_SUBDIRECTORY(packages)
-
-ADD_SUBDIRECTORY(qtlua)
 
 # For external packages...
 CONFIGURE_FILE(scripts/TorchPaths.cmake.in 
@@ -120,8 +87,6 @@ IF(EXISTS "${Torch_SOURCE_DIR}/openmp/CMakeLists.txt")
 ENDIF(EXISTS "${Torch_SOURCE_DIR}/openmp/CMakeLists.txt")
 
 
-# Dev Packages
-ADD_SUBDIRECTORY(dev)
 
 # CPack
 IF(EXISTS "${Torch_SOURCE_DIR}/milde/CPackLists.txt")
