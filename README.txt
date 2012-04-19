@@ -16,6 +16,17 @@ Hence, if you would like to see the functions present in the library,
 you need to expand the headers to get the list of function signatures available.
 Using gcc, this can be done using the gcc -E option.
 
+Installation
+============
+Clone the repo to a local folder with 
+git clone https://github.com/soumith/TH.git TH
+
+Then build TH using the cmake toolchain
+cd TH
+mkdir build && cd build
+cmake ..
+make && make install
+
 Notes
 ============
 All efforts will be made to keep them in sync with Torch-7's changes. If they 
